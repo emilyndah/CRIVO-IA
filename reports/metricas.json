@@ -1,0 +1,8 @@
+{
+  "mae_baseline_litros_dia": 2807.7,
+  "mae_modelo_litros_dia": 229.4,
+  "r2_baseline": -0.057,
+  "r2_modelo": 0.993,
+  "melhora_percentual_mae": 91.8,
+  "dias_no_teste": 18
+}
