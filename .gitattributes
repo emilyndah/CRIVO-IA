@@ -1,0 +1,13 @@
+# Normaliza finais de linha entre Windows/Linux/macOS
+* text=auto eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.joblib binary
+*.woff binary
+*.woff2 binary

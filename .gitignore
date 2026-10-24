@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────
+# Segredos e variáveis de ambiente
+# ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials*.json
+
+# ─────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+*.egg-info/
+build/
+
+# Banco local (SQLite de desenvolvimento)
+*.db
+*.sqlite3
+
+# ─────────────────────────────────────────────
+# Node / Frontend
+# ─────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.local
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─────────────────────────────────────────────
+# Editores e sistema operacional
+# ─────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
