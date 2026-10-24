@@ -1,0 +1,146 @@
+/* ==========================================================================
+   Crivo · Design tokens
+   Fonte: Identidade visual v1 (Figma) + paleta oficial do projeto.
+   Regra: componentes usam SOMENTE tokens semânticos (--color-*, --space-*…),
+   nunca hex direto.
+   ========================================================================== */
+
+:root {
+  /* ---------- Paleta bruta (todas as cores oficiais) ---------- */
+
+  /* Tinta — texto e fundos escuros */
+  --tinta-900: #10262b;
+  --tinta-800: #17363c;
+  --tinta-700: #2f4a50;
+
+  /* Ardósia / Tarifa — reajuste, sem ação */
+  --ardosia-700: #4b6170;
+  --ardosia-600: #6b8190; /* Tarifa */
+  --ardosia-500: #7c8f96;
+  --ardosia-400: #8fa5b3;
+  --ardosia-300: #9db2b5;
+
+  /* Névoa e Papel — fundos suaves */
+  --nevoa-400: #c9d6d4;
+  --nevoa-300: #dce3e0;
+  --cinza-300: #cfcfcf;
+  --papel: #f5f2ea;
+  --branco: #ffffff;
+
+  /* Turquesa — logo, destaques e fundos de marca */
+  --turquesa-500: #00b9d9; /* Turquesa oficial */
+  --turquesa-510: #00bbc6;
+  --turquesa-520: #00bbd5;
+  --turquesa-530: #00bbd7;
+  --turquesa-300: #00cfda;
+  --turquesa-funda: #0b7285; /* Botões e links com texto branco */
+
+  /* Alerta — uso acima do esperado */
+  --alerta-600: #c2410c;
+  --alerta-800: #8a2f0a;
+  --alerta-400: #f08a5d;
+  --alerta-050: #fdebdd;
+
+  /* ---------- Tokens semânticos ---------- */
+  --color-bg: var(--branco);
+  --color-bg-soft: var(--papel);
+  --color-surface: var(--branco);
+  --color-surface-muted: color-mix(in srgb, var(--papel) 50%, var(--branco));
+  --color-border: var(--nevoa-300);
+  --color-border-strong: var(--nevoa-400);
+
+  --color-text: var(--tinta-900);
+  --color-text-muted: var(--ardosia-700);
+  --color-text-subtle: var(--ardosia-500);
+  --color-text-inverse: var(--branco);
+
+  --color-brand: var(--turquesa-500);
+  --color-brand-strong: var(--turquesa-funda);
+  --color-brand-soft: color-mix(in srgb, var(--turquesa-500) 12%, var(--branco));
+
+  --color-expected: var(--tinta-900);
+  --color-tariff: var(--ardosia-600);
+  --color-overuse: var(--alerta-600);
+  --color-overuse-text: var(--alerta-800);
+  --color-overuse-bg: var(--alerta-050);
+
+  --color-success: var(--turquesa-funda);
+  --color-focus: var(--turquesa-500);
+
+  --gradient-brand: linear-gradient(
+    120deg,
+    var(--turquesa-300) 0%,
+    var(--turquesa-500) 45%,
+    var(--turquesa-funda) 100%
+  );
+  --gradient-ink: radial-gradient(
+      120% 80% at 0% 0%,
+      rgba(0, 185, 217, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(90% 70% at 100% 100%, rgba(0, 207, 218, 0.1) 0%, transparent 60%),
+    var(--tinta-900);
+
+  /* ---------- Tipografia ---------- */
+  --font-sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: clamp(1.75rem, 1.2rem + 1.6vw, 2.25rem);
+  --text-display: clamp(2.75rem, 1.8rem + 3vw, 4rem);
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------- Espaçamento (escala de 4px) ---------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ---------- Forma ---------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 38, 43, 0.06);
+  --shadow-md: 0 1px 2px rgba(16, 38, 43, 0.05), 0 8px 24px -12px rgba(16, 38, 43, 0.18);
+  --shadow-lg: 0 2px 4px rgba(16, 38, 43, 0.04), 0 24px 48px -24px rgba(16, 38, 43, 0.3);
+  --shadow-brand: 0 10px 30px -12px rgba(11, 114, 133, 0.55);
+
+  /* ---------- Movimento ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 700ms;
+
+  /* ---------- Layout ---------- */
+  --sidebar-width: 15rem;
+  --content-max: 72rem;
+  --z-drawer: 40;
+  --z-toast: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
