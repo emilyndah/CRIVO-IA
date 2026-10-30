@@ -1,3 +1,4 @@
+import { AppFooter } from '../components/AppFooter';
 import { Logo } from '../components/Logo';
 import { h, s } from '../core/dom';
 import { icon } from '../core/icons';
@@ -197,5 +198,10 @@ export function PaginaCadastro(): HTMLElement {
     ),
   );
 
-  return h('div', { class: 'auth' }, painelEsquerdo, formWrap);
+  return h(
+    'div',
+    { class: 'auth-wrapper' },
+    h('div', { class: 'auth' }, painelEsquerdo, formWrap),
+    AppFooter(),
+  );
 }

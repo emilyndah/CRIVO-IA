@@ -1,3 +1,4 @@
+import { AppFooter } from '../components/AppFooter';
 import { DecompBar } from '../components/DecompBar';
 import { Logo } from '../components/Logo';
 import { decompor } from '../core/decomposicao';
@@ -135,5 +136,10 @@ export function PaginaLogin(): HTMLElement {
     ),
   );
 
-  return h('div', { class: 'auth' }, painelEsquerdo, formWrap);
+  return h(
+    'div',
+    { class: 'auth-wrapper' },
+    h('div', { class: 'auth' }, painelEsquerdo, formWrap),
+    AppFooter(),
+  );
 }
