@@ -3,6 +3,7 @@ import { icon } from '../core/icons';
 import { router } from '../core/router';
 import { store } from '../core/store';
 import { api } from '../services/api';
+import { AppFooter } from './AppFooter';
 import { Logo } from './Logo';
 
 export interface AppShellOptions {
@@ -117,6 +118,7 @@ export function AppShell({ activePath, content }: AppShellOptions): HTMLElement 
     { class: 'shell__body' },
     topbar,
     main,
+    AppFooter(),
   );
 
   const shell = h(

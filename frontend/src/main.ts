@@ -12,14 +12,19 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/layout.css';
 
+import { AppFooter } from './components/AppFooter';
 import { AppShell } from './components/AppShell';
+import { Logo } from './components/Logo';
 import { initToastRegion } from './components/Toast';
+import { h } from './core/dom';
 import { router } from './core/router';
 import { store } from './core/store';
 import { PaginaAlertas } from './pages/alertas';
+import { PaginaAutores } from './pages/autores';
 import { PaginaCadastro } from './pages/cadastro';
 import { PaginaHistorico } from './pages/historico';
 import { PaginaLeitura } from './pages/leitura';
+import { PaginaLgpd } from './pages/lgpd';
 import { PaginaLogin } from './pages/login';
 import { PaginaResultado } from './pages/resultado';
 import { PaginaUnidades } from './pages/unidades';
@@ -46,6 +51,43 @@ async function wrapWithShell(
   return AppShell({ activePath: path, content: page });
 }
 
+// Helper para páginas institucionais públicas (sem autenticação)
+function wrapPublicInstitutional(page: HTMLElement): HTMLElement {
+  const topbar = h(
+    'header',
+    { class: 'public-topbar' },
+    h(
+      'div',
+      { class: 'public-topbar__inner' },
+      Logo({ variant: 'color', height: 32 }),
+      h(
+        'div',
+        { class: 'public-topbar__actions' },
+        h(
+          'a',
+          {
+            href: '/entrar',
+            class: 'btn btn--outline btn--sm',
+            onClick: (e: MouseEvent) => {
+              e.preventDefault();
+              router.navigate('/entrar');
+            },
+          },
+          'Acessar Sistema',
+        ),
+      ),
+    ),
+  );
+
+  return h(
+    'div',
+    { class: 'public-shell' },
+    topbar,
+    h('main', { class: 'public-main' }, page),
+    AppFooter(),
+  );
+}
+
 // ── Configuração das Rotas ─────────────────────────────────
 router
   .on('/', () => {
@@ -63,7 +105,11 @@ router
   .on('/app/leitura', () => wrapWithShell('/app/leitura', PaginaLeitura))
   .on('/app/unidades', () => wrapWithShell('/app/unidades', PaginaUnidades))
   .on('/app/alertas', () => wrapWithShell('/app/alertas', PaginaAlertas))
-  .on('/app/historico', () => wrapWithShell('/app/historico', PaginaHistorico));
+  .on('/app/historico', () => wrapWithShell('/app/historico', PaginaHistorico))
+  .on('/lgpd', () => (store.usuario ? wrapWithShell('/app/lgpd', PaginaLgpd) : wrapPublicInstitutional(PaginaLgpd())))
+  .on('/app/lgpd', () => wrapWithShell('/app/lgpd', PaginaLgpd))
+  .on('/autores', () => (store.usuario ? wrapWithShell('/app/autores', PaginaAutores) : wrapPublicInstitutional(PaginaAutores())))
+  .on('/app/autores', () => wrapWithShell('/app/autores', PaginaAutores));
 
 // Inicialização da aplicação
 async function iniciar() {
