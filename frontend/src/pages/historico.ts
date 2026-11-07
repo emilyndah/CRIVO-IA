@@ -27,13 +27,13 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
     const btnVerMes = h(
       'button',
       {
-        class: 'btn btn--ghost',
+        class: isMesAtivo ? 'btn' : 'btn btn--ghost',
         onClick: () => {
           store.setMesAtivo(item.mes);
           router.navigate('/app/resultado');
         },
       },
-      'Ver diagnóstico',
+      isMesAtivo ? 'Mês atual' : 'Ver diagnóstico →',
     );
 
     const variacaoBadge =
@@ -42,7 +42,6 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
             'span',
             {
               class: `tag ${item.variacaoMesAnteriorPct > 0 ? 'tag--alerta' : 'tag--marca'}`,
-              style: 'margin-left: var(--space-2);',
             },
             `${item.variacaoMesAnteriorPct > 0 ? '+' : ''}${porcentagem(item.variacaoMesAnteriorPct)}`,
           )
@@ -52,7 +51,9 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
       'article',
       {
         class: 'card card--hover',
-        style: isMesAtivo ? 'border-color: var(--color-brand-strong); box-shadow: var(--shadow-lg);' : '',
+        style: isMesAtivo
+          ? 'border-color: var(--color-brand-strong); box-shadow: var(--shadow-md);'
+          : '',
       },
       h(
         'div',
@@ -62,16 +63,24 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
           null,
           h(
             'div',
-            { style: 'display: flex; align-items: center;' },
-            h('h2', { class: 'card__title' }, mesAno(item.mes)),
+            { style: 'display: flex; align-items: center; gap: var(--space-2);' },
+            h(
+              'h2',
+              { class: 'card__title', style: 'text-transform: capitalize;' },
+              mesAno(item.mes),
+            ),
             variacaoBadge,
           ),
           h('span', { class: 'card__eyebrow' }, `Esperado: ${brl(item.esperado)}`),
         ),
         h(
           'div',
-          { style: 'text-align: right;' },
-          h('div', { class: 'mono', style: 'font-size: var(--text-2xl); font-weight: var(--weight-bold);' }, brl(item.valorPago)),
+          {
+            class: 'mono',
+            style:
+              'font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--tinta-900); line-height: 1;',
+          },
+          brl(item.valorPago),
         ),
       ),
       DecompBar({
@@ -82,7 +91,10 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
       }),
       h(
         'div',
-        { style: 'margin-top: var(--space-4); display: flex; justify-content: flex-end;' },
+        {
+          style:
+            'margin-top: auto; padding-top: var(--space-4); display: flex; justify-content: flex-end;',
+        },
         btnVerMes,
       ),
     );
@@ -97,14 +109,14 @@ export async function PaginaHistorico(): Promise<HTMLElement> {
       h(
         'div',
         null,
-        h('h1', { class: 'page-header__title' }, 'Histórico de Faturas'),
+        h('h1', { class: 'page-header__title' }, 'Histórico de faturas'),
         h(
           'p',
           { class: 'page-header__subtitle' },
-          'Acompanhe a evolução do consumo e o impacto dos reajustes de tarifa ao longo dos meses.',
+          'Acompanhe a evolução mensal da conta e o peso dos reajustes de tarifa.',
         ),
       ),
     ),
-    h('div', { class: 'stack' }, ...cardsMeses),
+    h('div', { class: 'grid grid--2' }, ...cardsMeses),
   );
 }
