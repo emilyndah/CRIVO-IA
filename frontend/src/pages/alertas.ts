@@ -50,7 +50,7 @@ export async function PaginaAlertas(): Promise<HTMLElement> {
         ? h(
             'button',
             {
-              class: 'btn btn--subtle',
+              class: 'btn btn--ghost',
               style: 'margin-left: auto;',
               onClick: async () => {
                 await api.marcarAlertaLido(a.id);
@@ -64,20 +64,25 @@ export async function PaginaAlertas(): Promise<HTMLElement> {
             icon('ok'),
             'Marcar como verificado',
           )
-        : h('span', { class: 'tag', style: 'margin-left: auto;' }, 'Verificado');
+        : h('span', { class: 'tag tag--marca', style: 'margin-left: auto;' }, 'Verificado');
 
       return h(
         'article',
         {
           class: `card ${isAlta ? 'card--hover' : ''}`,
-          style: isAlta ? 'border-left: 4px solid var(--color-overuse);' : '',
+          style: isAlta
+            ? 'border-left: 4px solid var(--color-overuse);'
+            : 'border-left: 4px solid var(--ardosia-500);',
         },
         h(
           'div',
-          { class: 'card__header', style: 'margin-bottom: var(--space-2);' },
+          {
+            style:
+              'display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-2);',
+          },
           h(
             'div',
-            { style: 'display: flex; align-items: center; gap: var(--space-2);' },
+            { style: 'display: flex; align-items: center; gap: var(--space-3);' },
             h(
               'span',
               { class: `tag ${isAlta ? 'tag--alerta' : 'tag--marca'}` },
@@ -88,13 +93,20 @@ export async function PaginaAlertas(): Promise<HTMLElement> {
           btnResolver,
         ),
         h('h2', { class: 'card__title' }, a.titulo),
-        h('p', { style: 'color: var(--color-text-muted); margin-top: var(--space-1);' }, a.descricao),
+        h(
+          'p',
+          {
+            style:
+              'color: var(--color-text-muted); font-size: var(--text-md); margin-top: var(--space-1); line-height: 1.5;',
+          },
+          a.descricao,
+        ),
         a.impactoEstimado
           ? h(
               'div',
               {
                 style:
-                  'margin-top: var(--space-3); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-text);',
+                  'margin-top: var(--space-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--tinta-900);',
               },
               `Impacto estimado: ${a.impactoEstimado}`,
             )
@@ -125,10 +137,10 @@ export async function PaginaAlertas(): Promise<HTMLElement> {
 
   const toolbar = h(
     'div',
-    { style: 'display: flex; gap: var(--space-2); margin-bottom: var(--space-6); flex-wrap: wrap;' },
+    { style: 'display: flex; gap: var(--space-2); flex-wrap: wrap;' },
     btnFiltro('todos', 'Todos'),
-    btnFiltro('alta', 'Possível Vazamento'),
-    btnFiltro('tarifa', 'Reajustes de Tarifa'),
+    btnFiltro('alta', 'Possível vazamento'),
+    btnFiltro('tarifa', 'Reajustes de tarifa'),
     btnFiltro('resolvido', 'Verificados'),
   );
 
@@ -143,15 +155,15 @@ export async function PaginaAlertas(): Promise<HTMLElement> {
       h(
         'div',
         null,
-        h('h1', { class: 'page-header__title' }, 'Alertas e Diagnósticos'),
+        h('h1', { class: 'page-header__title' }, 'Alertas'),
         h(
           'p',
           { class: 'page-header__subtitle' },
-          'Notificações em linguagem natural quando o consumo foge do padrão esperado.',
+          'Avisos claros quando o consumo foge do padrão esperado para o imóvel.',
         ),
       ),
+      toolbar,
     ),
-    toolbar,
     container,
   );
 }

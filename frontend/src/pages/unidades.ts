@@ -16,15 +16,22 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
   }
 
   const containerLista = h('div', { class: 'rows' });
+  const valorCountUnidades = h(
+    'div',
+    { class: 'summary-strip__value mono' },
+    String(unidades.length),
+  );
 
   const renderLista = () => {
+    valorCountUnidades.textContent = String(unidades.length);
+
     if (unidades.length === 0) {
       mount(
         containerLista,
         h(
           'div',
           { class: 'empty' },
-          h('p', null, 'Nenhuma unidade cadastrada. Adicione apartamentos ou setores abaixo.'),
+          h('p', null, 'Nenhuma unidade cadastrada. Adicione apartamentos ou setores ao lado.'),
         ),
       );
       return;
@@ -50,22 +57,38 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
 
       return h(
         'div',
-        { class: `row ${u.destaque ? 'row--highlight' : ''}` },
+        { class: `row ${u.destaque ? 'row--highlight' : ''}`, style: 'padding: var(--space-4) 0;' },
         h(
           'div',
           { class: 'row__main' },
-          h('div', { style: 'font-weight: var(--weight-medium);' }, u.nome),
           h(
             'div',
-            { style: 'font-size: var(--text-xs); color: var(--color-text-subtle);' },
-            `${u.ocupantesEstimados} pessoas · ${u.areaM2 || 60} m²`,
+            {
+              style:
+                'font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--tinta-900);',
+            },
+            u.nome,
+          ),
+          h(
+            'div',
+            {
+              style: 'font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;',
+            },
+            `${u.ocupantesEstimados} moradores · ${u.areaM2 || 60} m²`,
           ),
         ),
         u.consumoUltimoMes
           ? h(
               'div',
-              { style: 'text-align: right; margin-right: var(--space-3);' },
-              h('div', { class: 'mono' }, brl(u.consumoUltimoMes)),
+              { style: 'text-align: right; margin-right: var(--space-2);' },
+              h(
+                'div',
+                {
+                  class: 'mono',
+                  style: 'font-size: var(--text-md); font-weight: var(--weight-bold);',
+                },
+                brl(u.consumoUltimoMes),
+              ),
               h(
                 'div',
                 { style: 'font-size: var(--text-xs); color: var(--color-text-subtle);' },
@@ -82,7 +105,45 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
 
   renderLista();
 
-  // ── Formulário para Nova Unidade ──────────────────────────
+  // ── Faixa Limpa do Edifício ──────────────────────────────
+  const faixaImovel = h(
+    'section',
+    { class: 'summary-strip' },
+    h(
+      'div',
+      { class: 'summary-strip__item' },
+      h('span', { class: 'summary-strip__label' }, 'Imóvel'),
+      h('div', { class: 'summary-strip__value' }, predio?.nome || 'Condomínio Exemplo'),
+    ),
+    h(
+      'div',
+      { class: 'summary-strip__item' },
+      h('span', { class: 'summary-strip__label' }, 'Localidade'),
+      h(
+        'div',
+        { class: 'summary-strip__value' },
+        `${predio?.cidade || 'Anápolis'} – ${predio?.estado || 'GO'}`,
+      ),
+    ),
+    h(
+      'div',
+      { class: 'summary-strip__item' },
+      h('span', { class: 'summary-strip__label' }, 'Unidades na amostra'),
+      valorCountUnidades,
+    ),
+    h(
+      'div',
+      { class: 'summary-strip__item' },
+      h('span', { class: 'summary-strip__label' }, 'Tarifa de água'),
+      h(
+        'div',
+        { class: 'summary-strip__value mono', style: 'color: var(--color-brand-strong);' },
+        `${brl(predio?.tarifaVigenteAgua ?? 10.0)} / m³`,
+      ),
+    ),
+  );
+
+  // ── Formulário Lateral Limpo ─────────────────────────────
   let inputNome: HTMLInputElement;
   let inputPessoas: HTMLInputElement;
   let inputArea: HTMLInputElement;
@@ -90,8 +151,7 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
   const formNovaUnidade = h(
     'form',
     {
-      class: 'card card--soft',
-      style: 'margin-top: var(--space-6);',
+      class: 'card',
       onSubmit: async (e: Event) => {
         e.preventDefault();
         const nome = inputNome.value.trim();
@@ -115,22 +175,22 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
         }
       },
     },
-    h('h3', { class: 'card__title', style: 'margin-bottom: var(--space-3);' }, 'Adicionar nova unidade'),
+    h('div', { class: 'card__header' }, h('h2', { class: 'card__title' }, 'Nova unidade')),
     h(
       'div',
-      { class: 'grid grid--3' },
+      { class: 'field' },
+      h('label', { class: 'field__label' }, 'Identificação'),
+      (inputNome = h('input', { class: 'input', placeholder: 'Ex: Apto 403', required: true })),
+    ),
+    h(
+      'div',
+      { class: 'grid grid--2', style: 'margin-top: var(--space-4);' },
       h(
         'div',
         { class: 'field' },
-        h('label', { class: 'field__label' }, 'Identificação'),
-        (inputNome = h('input', { class: 'input', placeholder: 'Ex: Apto 403', required: true })),
-      ),
-      h(
-        'div',
-        { class: 'field' },
-        h('label', { class: 'field__label' }, 'Moradores / Ocupantes'),
+        h('label', { class: 'field__label' }, 'Moradores'),
         (inputPessoas = h('input', {
-          class: 'input',
+          class: 'input input--mono',
           type: 'number',
           min: '1',
           value: '3',
@@ -140,9 +200,9 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
       h(
         'div',
         { class: 'field' },
-        h('label', { class: 'field__label' }, 'Área estimada (m²)'),
+        h('label', { class: 'field__label' }, 'Área (m²)'),
         (inputArea = h('input', {
-          class: 'input',
+          class: 'input input--mono',
           type: 'number',
           value: '68',
         })),
@@ -150,34 +210,21 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
     ),
     h(
       'div',
-      { style: 'margin-top: var(--space-4); display: flex; justify-content: flex-end;' },
-      h('button', { type: 'submit', class: 'btn' }, icon('mais'), 'Adicionar unidade'),
+      { style: 'margin-top: auto; padding-top: var(--space-5);' },
+      h(
+        'button',
+        { type: 'submit', class: 'btn btn--block btn--lg' },
+        icon('mais'),
+        'Adicionar unidade',
+      ),
     ),
   );
 
-  // ── Configurações do Imóvel ──────────────────────────────
-  const cardPredio = h(
+  const cardListaUnidades = h(
     'article',
-    { class: 'card', style: 'margin-bottom: var(--space-6);' },
-    h('h2', { class: 'card__title', style: 'margin-bottom: var(--space-4);' }, 'Perfil do Edifício'),
-    h(
-      'div',
-      { class: 'grid grid--2' },
-      h(
-        'div',
-        null,
-        h('div', { class: 'field__label' }, 'Nome do imóvel'),
-        h('div', { style: 'font-size: var(--text-lg); font-weight: var(--weight-semibold);' }, predio?.nome || 'Condomínio Exemplo'),
-        h('div', { style: 'font-size: var(--text-sm); color: var(--color-text-subtle);' }, `${predio?.cidade || 'Anápolis'} – ${predio?.estado || 'GO'}`),
-      ),
-      h(
-        'div',
-        null,
-        h('div', { class: 'field__label' }, 'Tarifa Vigente de Água'),
-        h('div', { class: 'mono', style: 'font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-brand-strong);' }, `${brl(predio?.tarifaVigenteAgua ?? 10.0)} / m³`),
-        h('div', { style: 'font-size: var(--text-xs); color: var(--color-text-subtle);' }, 'Estrutura tarifária oficial Saneago / AGR'),
-      ),
-    ),
+    { class: 'card' },
+    h('div', { class: 'card__header' }, h('h2', { class: 'card__title' }, 'Unidades cadastradas')),
+    containerLista,
   );
 
   return h(
@@ -193,17 +240,11 @@ export async function PaginaUnidades(): Promise<HTMLElement> {
         h(
           'p',
           { class: 'page-header__subtitle' },
-          'Gerencie as unidades e parâmetros construtivos para calibração da linha de base.',
+          'Gerencie os apartamentos ou setores usados para comparar o consumo.',
         ),
       ),
     ),
-    cardPredio,
-    h(
-      'article',
-      { class: 'card' },
-      h('h2', { class: 'card__title', style: 'margin-bottom: var(--space-4);' }, 'Unidades cadastradas'),
-      containerLista,
-      formNovaUnidade,
-    ),
+    faixaImovel,
+    h('div', { class: 'grid grid--main-aside' }, cardListaUnidades, formNovaUnidade),
   );
 }

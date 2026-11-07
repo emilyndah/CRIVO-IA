@@ -1,7 +1,7 @@
 import { DecompBar } from '../components/DecompBar';
 import { decompor } from '../core/decomposicao';
 import { h } from '../core/dom';
-import { brl, nomeMes } from '../core/format';
+import { brl, m3, nomeMes } from '../core/format';
 import { router } from '../core/router';
 import { store } from '../core/store';
 import { api } from '../services/api';
@@ -23,14 +23,42 @@ export async function PaginaResultado(): Promise<HTMLElement> {
     );
   }
 
+  const tarifa = store.predio?.tarifaVigenteAgua ?? 10.0;
   const d = decompor({
     valorPago: dados.valorPago,
     esperado: dados.esperado,
     reajusteTarifa: dados.reajusteTarifa,
   });
 
-  // ── Header da Página ─────────────────────────────────────
+  const deltaReais = dados.valorPago - dados.esperado;
+
+  // ── Header Limpo e Focado ────────────────────────────────
   const mesNome = nomeMes(dados.mes);
+  const mesesRapidos = [
+    { ref: '2026-06', label: 'Junho' },
+    { ref: '2026-07', label: 'Julho' },
+    { ref: '2026-08', label: 'Agosto' },
+  ];
+
+  const seletorMeses = h(
+    'div',
+    { class: 'segmented', role: 'group', 'aria-label': 'Selecionar mês' },
+    ...mesesRapidos.map((m) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          'aria-pressed': dados.mes === m.ref ? 'true' : 'false',
+          onClick: () => {
+            store.setMesAtivo(m.ref);
+            router.navigate('/app/resultado');
+          },
+        },
+        m.label,
+      ),
+    ),
+  );
+
   const header = h(
     'header',
     { class: 'page-header' },
@@ -38,16 +66,16 @@ export async function PaginaResultado(): Promise<HTMLElement> {
       'div',
       null,
       h('h1', { class: 'page-header__title' }, `Resultado de ${mesNome}`),
-      h('p', { class: 'page-header__subtitle' }, 'Monitoramento de consumo hídrico predial'),
+      h(
+        'p',
+        { class: 'page-header__subtitle' },
+        `Monitoramento de consumo hídrico · ${store.predio?.nome || 'Condomínio Exemplo'}`,
+      ),
     ),
-    h(
-      'div',
-      { class: 'page-header__actions' },
-      h('span', { class: 'chip', 'aria-pressed': 'true' }, 'Água'),
-    ),
+    h('div', { class: 'page-header__actions' }, seletorMeses),
   );
 
-  // ── Card 1: Resultado Principal com Decomposição ─────────
+  // ── Card 1 (Foco Principal): Valor Pago + Decomposição ───
   const cardResultado = h(
     'article',
     { class: 'card card--hover enter', style: '--i: 0;' },
@@ -57,22 +85,40 @@ export async function PaginaResultado(): Promise<HTMLElement> {
       h('span', { class: 'card__eyebrow' }, `Valor pago em ${mesNome}`),
       h(
         'span',
-        { class: 'card__eyebrow' },
+        {
+          class: 'card__eyebrow',
+          style: 'font-weight: var(--weight-semibold); color: var(--tinta-800);',
+        },
         `Esperado para o seu perfil: ${brl(dados.esperado)}`,
       ),
     ),
     h(
       'div',
-      { style: 'margin-bottom: var(--space-6);' },
+      {
+        style:
+          'display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5);',
+      },
       h(
         'span',
         {
           class: 'mono',
           style:
-            'font-size: var(--text-display); font-weight: var(--weight-bold); line-height: 1; letter-spacing: -0.03em;',
+            'font-size: var(--text-display); font-weight: var(--weight-bold); line-height: 1; letter-spacing: -0.035em; color: var(--tinta-900);',
         },
         brl(dados.valorPago),
       ),
+      deltaReais !== 0
+        ? h(
+            'span',
+            {
+              class: `tag ${deltaReais > 0 ? 'tag--alerta' : 'tag--marca'}`,
+              style: 'font-size: var(--text-xs); padding: 0.25rem 0.65rem;',
+            },
+            deltaReais > 0
+              ? `+${brl(deltaReais)} acima do esperado`
+              : `${brl(Math.abs(deltaReais))} abaixo do esperado`,
+          )
+        : null,
     ),
     DecompBar({
       decomposicao: d,
@@ -89,10 +135,21 @@ export async function PaginaResultado(): Promise<HTMLElement> {
 
   // ── Card 2: Lançar Leitura Rápida ────────────────────────
   let inputValor: HTMLInputElement;
+  let previewM3: HTMLElement;
+
+  const atualizarPreview = () => {
+    const v = parseFloat(inputValor.value.replace(',', '.'));
+    if (!isNaN(v) && v > 0) {
+      previewM3.textContent = `Equivale a cerca de ${m3(v / tarifa)} de água.`;
+    } else {
+      previewM3.textContent = 'Informe o valor da conta para atualizar o resultado.';
+    }
+  };
 
   const formLeitura = h(
     'form',
     {
+      style: 'display: flex; flex-direction: column; flex: 1; gap: var(--space-4);',
       onSubmit: async (e: Event) => {
         e.preventDefault();
         const v = parseFloat(inputValor.value.replace(',', '.'));
@@ -100,79 +157,136 @@ export async function PaginaResultado(): Promise<HTMLElement> {
           store.addToast('Informe um valor pago válido em R$', 'erro');
           return;
         }
-
         try {
           await api.lancarLeitura({
-            data: `${dados.mes}-20`,
+            data: new Date().toISOString().slice(0, 10),
             valorPago: v,
           });
-          store.addToast(`Leitura de ${brl(v)} registrada com sucesso!`, 'sucesso');
-          // Recarrega a página para atualizar o gráfico
+          store.addToast('Leitura registrada com sucesso!', 'sucesso');
           router.navigate('/app/resultado');
         } catch {
-          store.addToast('Erro ao salvar leitura.', 'erro');
+          store.addToast('Erro ao registrar leitura.', 'erro');
         }
       },
     },
     h(
       'div',
       { class: 'field' },
-      h('label', { class: 'field__label' }, 'Tipo'),
+      h('label', { class: 'field__label', for: 'quick-tipo' }, 'Tipo'),
       h('input', {
+        id: 'quick-tipo',
         class: 'input',
+        type: 'text',
         value: 'Água',
         disabled: true,
-        style: 'background: var(--color-bg-soft);',
+        style: 'background: var(--color-surface-muted); color: var(--color-text-muted);',
       }),
     ),
     h(
       'div',
       { class: 'field' },
-      h('label', { class: 'field__label', for: 'input-valor-rapido' }, 'Valor pago (R$)'),
+      h('label', { class: 'field__label', for: 'quick-valor' }, 'Valor pago (R$)'),
       (inputValor = h('input', {
-        id: 'input-valor-rapido',
+        id: 'quick-valor',
         class: 'input input--mono',
         type: 'number',
         step: '0.01',
+        min: '1',
         value: String(dados.valorPago),
-        required: true,
+        placeholder: 'Ex: 187',
+        onInput: atualizarPreview,
       })),
+      (previewM3 = h(
+        'span',
+        { class: 'field__hint' },
+        `Equivale a cerca de ${m3(dados.valorPago / tarifa)} de água.`,
+      )),
     ),
     h(
       'div',
-      { style: 'margin-top: var(--space-5);' },
-      h('button', { type: 'submit', class: 'btn btn--block' }, 'Enviar leitura'),
-    ),
-    h(
-      'p',
-      { class: 'card__note' },
-      'Se pular um dia ou uma semana, tudo bem. O Crivo continua com o que já tem.',
+      {
+        style: 'margin-top: auto; display: grid; gap: var(--space-3); padding-top: var(--space-2);',
+      },
+      h('button', { type: 'submit', class: 'btn btn--block btn--lg' }, 'Enviar leitura'),
+      h(
+        'p',
+        {
+          style:
+            'font-size: var(--text-xs); color: var(--color-text-subtle); margin: 0; line-height: 1.45;',
+        },
+        'Se pular um dia ou uma semana, tudo bem. O Crivo continua com o que já tem.',
+      ),
     ),
   );
 
   const cardLancar = h(
     'article',
     { class: 'card enter', style: '--i: 1;' },
-    h('h2', { class: 'card__title', style: 'margin-bottom: var(--space-4);' }, 'Lançar leitura'),
+    h('div', { class: 'card__header' }, h('h2', { class: 'card__title' }, 'Lançar leitura')),
     formLeitura,
   );
 
   // ── Card 3: Unidades Parecidas ───────────────────────────
+  const maxUnidadeVal = Math.max(...dados.unidadesParecidas.map((u) => u.valorPago), 200);
   const linhasUnidades = dados.unidadesParecidas.map((u) => {
+    const pctWidth = Math.min(100, Math.round((u.valorPago / maxUnidadeVal) * 100));
     return h(
       'div',
-      { class: `row ${u.destaque ? 'row--highlight' : ''}` },
-      h('span', { class: 'row__main' }, u.nome),
-      h('span', { class: 'row__value mono' }, brl(u.valorPago)),
+      { class: `unit-bench ${u.destaque ? 'unit-bench--highlight' : ''}` },
+      h(
+        'div',
+        { class: 'unit-bench__top' },
+        h(
+          'span',
+          {
+            style: u.destaque
+              ? 'font-weight: var(--weight-semibold); color: var(--tinta-900);'
+              : '',
+          },
+          u.nome,
+        ),
+        h(
+          'span',
+          {
+            class: 'mono',
+            style: u.destaque
+              ? 'font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--color-overuse);'
+              : 'font-size: var(--text-md); font-weight: var(--weight-medium);',
+          },
+          brl(u.valorPago),
+        ),
+      ),
+      h(
+        'div',
+        { class: 'unit-bench__track' },
+        h('div', { class: 'unit-bench__fill', style: `width: ${pctWidth}%;` }),
+      ),
     );
   });
 
   const cardUnidades = h(
     'article',
     { class: 'card enter', style: '--i: 2;' },
-    h('h2', { class: 'card__title', style: 'margin-bottom: var(--space-3);' }, 'Unidades parecidas'),
-    h('div', { class: 'rows' }, ...linhasUnidades),
-    h('p', { class: 'card__note' }, 'Dados de exemplo para comparação entre unidades congêneres.'),
+    h(
+      'div',
+      { class: 'card__header' },
+      h('h2', { class: 'card__title' }, 'Unidades parecidas'),
+      h(
+        'a',
+        {
+          href: '/app/unidades',
+          class: 'btn btn--subtle',
+          style: 'min-height: 2rem; font-size: var(--text-xs);',
+          onClick: (e: MouseEvent) => {
+            e.preventDefault();
+            router.navigate('/app/unidades');
+          },
+        },
+        'Ver unidades →',
+      ),
+    ),
+    h('div', null, ...linhasUnidades),
+    h('p', { class: 'card__note' }, 'Comparação anônima entre unidades de porte semelhante.'),
   );
 
   // ── Card 4: Alertas do Mês ───────────────────────────────
@@ -188,24 +302,30 @@ export async function PaginaResultado(): Promise<HTMLElement> {
   const cardAlertas = h(
     'article',
     { class: 'card enter', style: '--i: 3;' },
-    h('h2', { class: 'card__title', style: 'margin-bottom: var(--space-3);' }, 'Alertas'),
+    h(
+      'div',
+      { class: 'card__header' },
+      h('h2', { class: 'card__title' }, 'Alertas'),
+      h(
+        'a',
+        {
+          href: '/app/alertas',
+          class: 'btn btn--subtle',
+          style: 'min-height: 2rem; font-size: var(--text-xs);',
+          onClick: (e: MouseEvent) => {
+            e.preventDefault();
+            router.navigate('/app/alertas');
+          },
+        },
+        'Ver todos →',
+      ),
+    ),
     h('div', null, ...itensAlertas),
   );
 
-  // ── Montagem da Grade ────────────────────────────────────
-  const gridPrincipal = h(
-    'div',
-    { class: 'grid grid--main-aside' },
-    cardResultado,
-    cardLancar,
-  );
-
-  const gridSecundario = h(
-    'div',
-    { class: 'grid grid--2', style: 'margin-top: var(--space-6);' },
-    cardUnidades,
-    cardAlertas,
-  );
+  // ── Grade Bento Simétrica e Coesa ────────────────────────
+  const gridPrincipal = h('div', { class: 'grid grid--main-aside' }, cardResultado, cardLancar);
+  const gridSecundario = h('div', { class: 'grid grid--main-aside' }, cardUnidades, cardAlertas);
 
   return h('div', { class: 'page' }, header, gridPrincipal, gridSecundario);
 }

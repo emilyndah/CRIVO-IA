@@ -14,7 +14,7 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
   }
 
   const predio = store.predio;
-  const tarifa = predio?.tarifaVigenteAgua ?? 10.0; // R$/m³
+  const tarifa = predio?.tarifaVigenteAgua ?? 10.0;
 
   let inputData: HTMLInputElement;
   let selectUnidade: HTMLSelectElement;
@@ -28,13 +28,11 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
     const vol = parseFloat(inputVolume.value.replace(',', '.')) || 0;
 
     if (val > 0 && vol === 0) {
-      const volEst = val / tarifa;
-      resumoConversao.textContent = `Aproximadamente ${m3(volEst)} com a tarifa de ${brl(tarifa)}/m³ da Saneago.`;
+      resumoConversao.textContent = `Aproximadamente ${m3(val / tarifa)} de água com a tarifa atual de ${brl(tarifa)}/m³.`;
     } else if (vol > 0 && val === 0) {
-      const valEst = vol * tarifa;
-      resumoConversao.textContent = `Aproximadamente ${brl(valEst)} calculados pela tarifa de ${brl(tarifa)}/m³.`;
+      resumoConversao.textContent = `Aproximadamente ${brl(vol * tarifa)} calculados pela tarifa de ${brl(tarifa)}/m³.`;
     } else {
-      resumoConversao.textContent = `Tarifa de referência: ${brl(tarifa)}/m³ homologada pela AGR.`;
+      resumoConversao.textContent = `Tarifa atual considerada: ${brl(tarifa)} por m³.`;
     }
   };
 
@@ -70,6 +68,7 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
         }
       },
     },
+    h('div', { class: 'card__header' }, h('h2', { class: 'card__title' }, 'Dados da leitura')),
     h(
       'div',
       { class: 'grid grid--2' },
@@ -88,11 +87,11 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
       h(
         'div',
         { class: 'field' },
-        h('label', { class: 'field__label', for: 'lei-und' }, 'Unidade / Ponto de consumo'),
+        h('label', { class: 'field__label', for: 'lei-und' }, 'Unidade ou hidrômetro'),
         (selectUnidade = h(
           'select',
           { id: 'lei-und', class: 'select' },
-          h('option', { value: '' }, 'Medição Geral do Edifício (Hidrômetro Principal)'),
+          h('option', { value: '' }, 'Medição Geral do Edifício'),
           ...unidades.map((u) => h('option', { value: u.id }, u.nome)),
         )),
       ),
@@ -103,30 +102,30 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
       h(
         'div',
         { class: 'field' },
-        h('label', { class: 'field__label', for: 'lei-valor' }, 'Valor pago ou cobrado (R$)'),
+        h('label', { class: 'field__label', for: 'lei-valor' }, 'Valor da conta (R$)'),
         (inputValor = h('input', {
           id: 'lei-valor',
           type: 'number',
           step: '0.01',
           class: 'input input--mono',
-          placeholder: 'Ex: 187.00',
+          placeholder: 'Ex: 187,00',
           onInput: atualizarConversao,
         })),
-        h('span', { class: 'field__hint' }, 'Pode ser o valor total da conta ou estimativa parcial.'),
+        h('span', { class: 'field__hint' }, 'Valor cobrado no boleto ou estimativa.'),
       ),
       h(
         'div',
         { class: 'field' },
-        h('label', { class: 'field__label', for: 'lei-vol' }, 'Volume medido no hidrômetro (m³)'),
+        h('label', { class: 'field__label', for: 'lei-vol' }, 'Volume no hidrômetro (m³)'),
         (inputVolume = h('input', {
           id: 'lei-vol',
           type: 'number',
           step: '0.1',
           class: 'input input--mono',
-          placeholder: 'Ex: 18.7',
+          placeholder: 'Ex: 18,7',
           onInput: atualizarConversao,
         })),
-        h('span', { class: 'field__hint' }, 'Opcional. Se preencher, o Crivo calcula o custo exato.'),
+        h('span', { class: 'field__hint' }, 'Opcional se você já informou o valor em R$.'),
       ),
     ),
     h(
@@ -137,30 +136,73 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
         id: 'lei-obs',
         type: 'text',
         class: 'input',
-        placeholder: 'Ex: leitura semanal do zelador, hidrômetro do bloco B',
+        placeholder: 'Ex: Leitura semanal da portaria',
       })),
     ),
     (resumoConversao = h(
-      'p',
+      'div',
       {
-        class: 'card__note',
-        style: 'margin-top: var(--space-4); font-size: var(--text-sm); color: var(--color-brand-strong);',
+        class: 'callout callout--ok',
+        style: 'margin-top: var(--space-5); font-size: var(--text-sm);',
       },
-      `Tarifa de referência: ${brl(tarifa)}/m³ homologada pela AGR.`,
+      `Tarifa atual considerada: ${brl(tarifa)} por m³.`,
     )),
     h(
       'div',
-      { style: 'margin-top: var(--space-6); display: flex; gap: var(--space-3); justify-content: flex-end;' },
+      {
+        style:
+          'margin-top: auto; padding-top: var(--space-5); display: flex; gap: var(--space-3); justify-content: flex-end;',
+      },
       h(
         'button',
         {
           type: 'button',
-          class: 'btn btn--ghost',
+          class: 'btn btn--ghost btn--lg',
           onClick: () => router.navigate('/app/resultado'),
         },
         'Cancelar',
       ),
-      h('button', { type: 'submit', class: 'btn' }, 'Salvar leitura'),
+      h('button', { type: 'submit', class: 'btn btn--lg' }, 'Salvar leitura'),
+    ),
+  );
+
+  const cardDicas = h(
+    'aside',
+    { class: 'card' },
+    h('div', { class: 'card__header' }, h('h2', { class: 'card__title' }, 'Como o Crivo analisa')),
+    h(
+      'div',
+      { class: 'stack' },
+      h(
+        'div',
+        { class: 'alert-item' },
+        h('div', { class: 'alert-item__title' }, 'Valor ou volume, você escolhe'),
+        h(
+          'div',
+          { class: 'alert-item__desc' },
+          'Basta preencher um dos dois campos. O sistema converte automaticamente.',
+        ),
+      ),
+      h(
+        'div',
+        { class: 'alert-item' },
+        h('div', { class: 'alert-item__title' }, 'Separação automática da tarifa'),
+        h(
+          'div',
+          { class: 'alert-item__desc' },
+          'Mostramos quanto do aumento veio de reajuste e quanto foi consumo real.',
+        ),
+      ),
+      h(
+        'div',
+        { class: 'alert-item alert-item--alta' },
+        h('div', { class: 'alert-item__title' }, 'Aviso rápido de vazamento'),
+        h(
+          'div',
+          { class: 'alert-item__desc' },
+          'Se o consumo passar do padrão esperado para o prédio, um alerta é gerado.',
+        ),
+      ),
     ),
   );
 
@@ -173,14 +215,14 @@ export async function PaginaLeitura(): Promise<HTMLElement> {
       h(
         'div',
         null,
-        h('h1', { class: 'page-header__title' }, 'Lançar leitura manual'),
+        h('h1', { class: 'page-header__title' }, 'Lançar leitura'),
         h(
           'p',
           { class: 'page-header__subtitle' },
-          'Registre a leitura periódica do hidrômetro ou fatura em menos de 1 minuto.',
+          'Registre o valor da fatura ou a medição do hidrômetro em menos de 1 minuto.',
         ),
       ),
     ),
-    form,
+    h('div', { class: 'grid grid--main-aside' }, form, cardDicas),
   );
 }
